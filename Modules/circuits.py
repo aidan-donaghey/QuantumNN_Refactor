@@ -5,6 +5,7 @@ from matplotlib.pyplot import get
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
 from scipy import sparse, linalg
+from sklearn.preprocessing import normalize
 
 
 class Circuit:
@@ -143,14 +144,19 @@ class Circuit:
         # alphas are of shape (1, N) and betas are of shape (N, 1) and transition is of shape (N, N)
         # xi is of shape (N, N)
         transistionmatrices = self.get_allgates()
-        px = self.get_px()
+        # This is for another way to normalise the xi
+        # px = self.get_px()
 
         self.xis = []
         for index, transistionmatrix in enumerate(transistionmatrices):
             unnormalisedxi = transistionmatrix.matrix.multiply(
                 (self.alphas[index].T @ self.betas[index + 1].T).T
             )
-            self.xis.append(unnormalisedxi / px)
+            # Normalise the xi
+            # axis = 1 is the row axis
+            normalisedxi = normalize(unnormalisedxi, norm="l1", axis=1)
+
+            self.xis.append(normalisedxi)
 
         return self.xis
 
