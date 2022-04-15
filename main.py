@@ -3,6 +3,7 @@
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
 from Modules.circuits import Circuit
+from Modules.collectionofcircuits import Collection
 
 # # Testing the RZX gate
 # rzx = RzxGate(2, 1, 1)
@@ -45,13 +46,26 @@ CURRENTDATA = IDENTITYDATA
 DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
 DataPoint = DataSet[0]
 testCircuit = Circuit(Qubits, *DataPoint, Gates, [1, 2, 3, 4, 5, 6])
-print(testCircuit)
+# print(testCircuit)
 
-testCircuit.forward_pass()
-# print([x.A for x in testCircuit.alphas])
+# print("The XI values are:\n", [x.A for x in testCircuit.get_xis()])
+# print("XI Values from the circuit:\n", [x.A for x in testCircuit.get_xis()])
+# testCircuit.get_xis()
+# print(
+#     "The numerator and Denominator:",
+#     testCircuit.get_numerators_and_denominators_for_circuit(),
+# )
+# # print([x.A for x in testCircuit.alphas])
 
-testCircuit.backward_pass()
+# testCircuit.backward_pass()
 
-# print(*[f"beta {index}:\n{x.A}\n" for index, x in enumerate(testCircuit.betas)])
+# # print(*[f"beta {index}:\n{x.A}\n" for index, x in enumerate(testCircuit.betas)])
 
-print([xi.A for xi in testCircuit.get_xi()])
+# print([xi.A for xi in testCircuit.get_xi()])
+
+testCollection = Collection(Qubits, DataSet, Gates)
+testCollection.create_circuits()
+# ws = testCollection.calculate_ws()
+# print(ws)
+testCollection.fit(Epoch=10)
+print(testCollection.predict(DataPoint))

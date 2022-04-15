@@ -6,6 +6,7 @@ from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
 from scipy import sparse, linalg
 from sklearn.preprocessing import normalize
+import numpy as np
 
 
 class Circuit:
@@ -38,6 +39,140 @@ class Circuit:
 
         self.create_circuit()
 
+    def create_circuit(self) -> None:
+        """This creates the circuit. It calls the createLayer function for each layer."""
+        for indexofgate, gate in enumerate(self.gates):
+            if gate == "RZX":
+                # This theta should be (number of bits - 1) * number of gates
+                # We need between indexOfGate * number of bits and (indexOfGate + 1) * number of bits
+                self.blocks.append(
+                    RzxBlock(
+                        self.number_of_bits,
+                        self.thetas[
+                            indexofgate
+                            * (self.number_of_bits - 1) : (indexofgate + 1)
+                            * (self.number_of_bits - 1)
+                        ],
+                    )
+                )
+            elif gate == "RXX":
+                self.blocks.append(
+                    RxxBlock(
+                        self.number_of_bits,
+                        self.thetas[
+                            indexofgate
+                            * (self.number_of_bits - 1) : (indexofgate + 1)
+                            * (self.number_of_bits - 1)
+                        ],
+                    )
+                )
+            else:
+                raise NotImplementedError(f"Gate {gate} is not implemented")
+
+    def get_allgates(self) -> list:
+        """This returns all the gates in the circuit.
+
+        Returns:
+            list: A list of all the gates in the circuit.
+        """
+        temp = [blocks for blocks in self.blocks]
+        allgates = []
+        for x in temp:
+            for y in x.gates:
+                allgates.append(y)
+        return allgates
+
+    def forward_pass(self) -> list:
+        """This is the forward pass of the circuit. It is used to calculate the alphas.
+            alphas take the shape (1, 2**number_of_bits)
+
+        Returns:
+            list: A list of all the gates in the circuit.
+        """
+        self.alphas = []
+        transistionmatrices = self.get_allgates()
+        self.alphas.append(self.inputstate)
+        for transistionmatrix in transistionmatrices:
+            self.alphas.append(self.alphas[-1] @ transistionmatrix.matrix)
+            self.alphas.append(self.alphas[-1].multiply(self.outputstate.T))
+        return self.alphas
+
+    def backward_pass(self) -> list:
+        """This is the backward pass of the circuit. It is used to calculate the betas, xis.
+            beta take the shape (2**number_of_bits, 1)
+        Returns:
+            list: A list of all the gates in the circuit.
+        """
+        self.betas = []
+        transistionmatrices = self.get_allgates()
+        self.betas.append(self.outputstate)
+        for transistionmatrix in reversed(transistionmatrices):
+            self.betas.append(transistionmatrix.matrix.T @ (self.betas[-1].T).T)
+        self.betas.reverse()
+        return self.betas
+
+    def get_xis(self) -> list:
+        """This is the xis calculation.  It also runs the forward and backward pass."""
+        self.forward_pass()
+        self.backward_pass()
+        # alphas are of shape (1, N) and betas are of shape (N, 1) and transition is of shape (N, N)
+        # xi is of shape (N, N)
+        transistionmatrices = self.get_allgates()
+        # This is for another way to normalise the xi
+        # px = self.get_px()
+
+        self.xis = []
+        for index, transistionmatrix in enumerate(transistionmatrices):
+            unnormalisedxi = transistionmatrix.matrix.multiply(
+                (self.alphas[index].T @ self.betas[index + 1].T).T
+            )
+            # Normalise the xi
+            # axis = 1 is the row axis
+            normalisedxi = normalize(unnormalisedxi, norm="l1", axis=1)
+
+            self.xis.append(normalisedxi)
+
+        return self.xis
+
+    def get_px(self):
+        """This is the probability of the output state.
+
+        Returns:
+            float: The probability of the output state.
+        """
+        return self.alphas[-1].sum()
+
+    def get_numerators_and_denominators_for_circuit(self):
+        """This is the numerator of the xi.
+
+        Returns:
+            list: A list of numerators for each xi.
+        """
+        listofdenominators = []
+        listofnumerators = []
+        # First lets calculate the denominators
+        # This is based off of my new assumption that
+        # xi is going to be the sum of every element in the array. I believe this is true
+        # If it is the sum of the off and on diagonals .
+        for gate, xi in zip(self.get_allgates(), self.xis):
+            listofdenominators.append(xi.sum())
+            if gate.__name__ == "RzxGate":
+                matrix = xi.multiply(gate.zk_matrix)
+            elif gate.__name__ == "RxxGate":
+                matrix = xi
+            sumofdiagonals = matrix.diagonal().sum()
+            sumofoffdiagonals = matrix.tolil().sum()
+            listofnumerators.append(sumofoffdiagonals - sumofdiagonals)
+
+        return listofnumerators, listofdenominators
+
+    def update_w(self, thetas):
+        """This is the update of the thetas."""
+        self.thetas = thetas
+
+    # ==================================
+    # Private Functions
+    # ==================================
     def __repr__(self) -> str:
         return (
             f"Circuit: {self.number_of_bits} bits\n"
@@ -97,103 +232,3 @@ class Circuit:
         A = sparse.coo_matrix((data, (row, col)), shape=(d, 1))
         A.tocsr()
         return A
-
-    def get_allgates(self) -> list:
-        """This returns all the gates in the circuit.
-
-        Returns:
-            list: A list of all the gates in the circuit.
-        """
-        temp = [blocks for blocks in self.blocks]
-        allgates = []
-        for x in temp:
-            for y in x.gates:
-                allgates.append(y)
-        return allgates
-
-    def forward_pass(self) -> list:
-        """This is the forward pass of the circuit. It is used to calculate the alphas, betas, xis.
-            alphas take the shape (1, 2**number_of_bits)
-
-        Returns:
-            list: A list of all the gates in the circuit.
-        """
-        self.alphas = []
-        transistionmatrices = self.get_allgates()
-        self.alphas.append(self.inputstate)
-        for transistionmatrix in transistionmatrices:
-            self.alphas.append(self.alphas[-1] @ transistionmatrix.matrix)
-            self.alphas.append(self.alphas[-1].multiply(self.outputstate.T))
-        return self.alphas
-
-    def backward_pass(self) -> list:
-        """This is the backward pass of the circuit. It is used to calculate the betas, xis.
-            beta take the shape (2**number_of_bits, 1)
-        Returns:
-            list: A list of all the gates in the circuit.
-        """
-        self.betas = []
-        transistionmatrices = self.get_allgates()
-        self.betas.append(self.outputstate)
-        for transistionmatrix in reversed(transistionmatrices):
-            self.betas.append(transistionmatrix.matrix.T @ (self.betas[-1].T).T)
-        self.betas.reverse()
-        return self.betas
-
-    def get_xi(self) -> list:
-        # alphas are of shape (1, N) and betas are of shape (N, 1) and transition is of shape (N, N)
-        # xi is of shape (N, N)
-        transistionmatrices = self.get_allgates()
-        # This is for another way to normalise the xi
-        # px = self.get_px()
-
-        self.xis = []
-        for index, transistionmatrix in enumerate(transistionmatrices):
-            unnormalisedxi = transistionmatrix.matrix.multiply(
-                (self.alphas[index].T @ self.betas[index + 1].T).T
-            )
-            # Normalise the xi
-            # axis = 1 is the row axis
-            normalisedxi = normalize(unnormalisedxi, norm="l1", axis=1)
-
-            self.xis.append(normalisedxi)
-
-        return self.xis
-
-    def get_px(self):
-        """This is the probability of the output state.
-
-        Returns:
-            float: The probability of the output state.
-        """
-        return self.alphas[-1].sum()
-
-    def create_circuit(self) -> None:
-        """This creates the circuit. It calls the createLayer function for each layer."""
-        for indexofgate, gate in enumerate(self.gates):
-            if gate == "RZX":
-                # This theta should be (number of bits - 1) * number of gates
-                # We need between indexOfGate * number of bits and (indexOfGate + 1) * number of bits
-                self.blocks.append(
-                    RzxBlock(
-                        self.number_of_bits,
-                        self.thetas[
-                            indexofgate
-                            * (self.number_of_bits - 1) : (indexofgate + 1)
-                            * (self.number_of_bits - 1)
-                        ],
-                    )
-                )
-            elif gate == "RXX":
-                self.blocks.append(
-                    RxxBlock(
-                        self.number_of_bits,
-                        self.thetas[
-                            indexofgate
-                            * (self.number_of_bits - 1) : (indexofgate + 1)
-                            * (self.number_of_bits - 1)
-                        ],
-                    )
-                )
-            else:
-                raise NotImplementedError(f"Gate {gate} is not implemented")
