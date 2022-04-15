@@ -2,7 +2,7 @@
 
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
-from Modules.circuits2 import Circuit
+from Modules.circuits import Circuit
 
 # # Testing the RZX gate
 # rzx = RzxGate(2, 1, 1)

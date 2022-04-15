@@ -145,33 +145,6 @@ class Circuit:
         transistionmatrices = self.get_allgates()
         px = self.get_px()
 
-        # Option 1
-        self.xis = []
-        for index, transistionmatrix in enumerate(transistionmatrices):
-            unnormalisedxi = (
-                self.alphas[index] @ transistionmatrix.matrix @ self.betas[index + 1]
-            )
-            self.xis.append(unnormalisedxi / px)
-
-        # Option 2 - This gives a (N,N) matrix with a dot product of it and transition matrix.
-        self.xis = []
-        for index, transistionmatrix in enumerate(transistionmatrices):
-            unnormalisedxi = (
-                self.alphas[index].T
-                @ self.betas[index + 1].T
-                @ transistionmatrix.matrix
-            )
-            self.xis.append(unnormalisedxi / px)
-
-        # Option 3 - Same as option 2 but all of it transposed again before dot with transition matrix.
-        self.xis = []
-        for index, transistionmatrix in enumerate(transistionmatrices):
-            unnormalisedxi = (
-                self.alphas[index].T @ self.betas[index + 1].T
-            ).T @ transistionmatrix.matrix
-            self.xis.append(unnormalisedxi / px)
-
-        # Option 4 - Same operation for alphas and betas and then transposed but then element wise multiplied with the transition matrix.
         self.xis = []
         for index, transistionmatrix in enumerate(transistionmatrices):
             unnormalisedxi = transistionmatrix.matrix.multiply(
