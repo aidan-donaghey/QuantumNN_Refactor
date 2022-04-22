@@ -5,7 +5,6 @@ from matplotlib.pyplot import get
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
 from scipy import sparse, linalg
-from sklearn.preprocessing import normalize
 import numpy as np
 
 
@@ -94,7 +93,7 @@ class Circuit:
         self.alphas.append(self.inputstate)
         for transistionmatrix in transistionmatrices:
             self.alphas.append(self.alphas[-1] @ transistionmatrix.matrix)
-            self.alphas.append(self.alphas[-1].multiply(self.outputstate.T))
+        self.alphas.append(self.alphas[-1].multiply(self.outputstate.T))
         return self.alphas
 
     def backward_pass(self) -> list:
@@ -128,7 +127,8 @@ class Circuit:
             )
             # Normalise the xi
             # axis = 1 is the row axis
-            normalisedxi = normalize(unnormalisedxi, norm="l1", axis=1)
+            # normalisedxi = normalize(unnormalisedxi, norm="l1", axis=1)
+            normalisedxi = unnormalisedxi / unnormalisedxi.sum()
 
             self.xis.append(normalisedxi)
 
@@ -160,15 +160,41 @@ class Circuit:
                 matrix = xi.multiply(gate.zk_matrix)
             elif gate.__name__ == "RxxGate":
                 matrix = xi
+            print(f"Matrix : {matrix}")
             sumofdiagonals = matrix.diagonal().sum()
-            sumofoffdiagonals = matrix.tolil().sum()
-            listofnumerators.append(sumofoffdiagonals - sumofdiagonals)
-
+            print(f"Sum of diagonals : {sumofdiagonals}")
+            matcopy = matrix.copy()
+            matcopy.setdiag(0)
+            print(f"Off diagonals : {matcopy}")
+            sumoffdiagonals = matcopy.tolil().sum()
+            print(f"Sum of off diagonals : {sumoffdiagonals}")
+            listofnumerators.append(sumoffdiagonals - sumofdiagonals)
+        print(f"List of Denominators: {listofdenominators}")
         return listofnumerators, listofdenominators
 
     def update_w(self, thetas):
         """This is the update of the thetas."""
         self.thetas = thetas
+
+    def predict(self) -> list:
+        """This is the prediction of the output state.
+
+        Returns:
+            list: The prediction of the output state.
+        """
+        self.forward_pass()
+        # This is the last alphas without the mask applied
+        secondLastAlpha = self.alphas[-2].A
+        # I am just summing over the first half or the second half of the array
+        probOf0Output = secondLastAlpha[0][: len(secondLastAlpha[0]) // 2].sum()
+        probOf1Output = secondLastAlpha[0][len(secondLastAlpha[0]) // 2 :].sum()
+        print("==============================")
+        print("=========Prediction===========")
+        print("==============================")
+        print(f"The correct Output is: {self.outputfeature}")
+        print(f"Prob of 0: {probOf0Output}")
+        print(f"Prob of 1: {probOf1Output}")
+        print("==============================\n")
 
     # ==================================
     # Private Functions

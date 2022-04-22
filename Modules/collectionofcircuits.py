@@ -1,6 +1,7 @@
 from Modules.circuits import Circuit
 import numpy as np
-
+from typing import Union
+import sys
 
 class Collection:
     """Creates a new CircuitCollection Object. It creates a circuit with the correct input and output features based on the dataset that is provided."""
@@ -20,7 +21,7 @@ class Collection:
         self.circuits = []
         self.trainedModel = None
 
-    def create_circuits(self, Theta=None, intialTheta=None):
+    def create_circuits(self, Theta:Union[list,float]=None, intialTheta:Union[list,float]=None):
         """This creates an entire collection of circuits. Basically a circuit for each Datapoint.
 
         Args:
@@ -53,12 +54,16 @@ class Collection:
         Args:
             Epoch (int, optional): The number of epochs to run the circuit for. Defaults to 10.
         """
+
+        allepochs = []
+        allepochs.append(self.circuits[0])
         for epoch in range(Epoch):
             print(f"Epoch {epoch}")
             # self.print_transistion_matrices()
             self.create_circuits(self.__calculate_ws())
+            allepochs.append(self.circuits[0])
         self.trainedModel = self.__calculate_ws()
-        return self.trainedModel
+        return allepochs
 
     def predict(self, Datapoint):
         """This will predict the output of the circuit.
@@ -72,15 +77,20 @@ class Collection:
         circuit = Circuit(
             self.number_of_bits, *Datapoint, self.Gates, self.trainedModel
         )
-        circuit.forward_pass()
-        return circuit.get_px()
+        # This returns the last alpha which is the forward pass including the mask
+        return circuit.predict()
 
     def __calculate_ws(self):
         """Calculates the W values for each circuit in the collection."""
         nums_and_denoms = self.__sum_of_nums_and_denums()
         terms_inside_tan = [x / y for x, y in zip(*nums_and_denoms)]
-        w = list(np.arctanh(terms_inside_tan))
-        # print(w)
+        print("Terms inside the tan func1")
+        print(terms_inside_tan)
+        w = [np.arctanh(term) if np.abs(term) < 0.99 else np.sign(term) * 100 for term in terms_inside_tan]
+
+        # w = list(np.arctanh(terms_inside_tan))
+        print("W VALUESE")
+        print(w)
         return w
 
     def __sum_of_nums_and_denums(self):
@@ -124,3 +134,5 @@ class Collection:
     def print_transistion_matrices(self):
         for gate in self.circuits[0].get_allgates():
             gate.print_matrix()
+
+    

@@ -234,53 +234,28 @@ def generateDataSetAlternative(
         f.write(outputfile)
 
 
-def printTransistionMatrices(circuit, epoch=None, latex=None):
-    data = []
-    for index, x in enumerate(circuit.circuits[0].TransistionLayers):
-        print(
-            f"Epoch {epoch} - Transistion Matrix {index +1} - Type: {circuit.circuits[0].LayerNames[index]}"
-        )
-        if latex == True:
-            print("It got in herer")
-            data.append([epoch, index + 1, circuit.circuits[0].LayerNames[index], x])
-        print(x)
-    if latex == True:
-        latexAPI.printAllMatrices(data)
+def printtransistionforeachepoch(allcircuits):
+    for index, epoch in enumerate(allcircuits):
+        print("==========================")
+        print("Epoch No:", index)
+        print("==========================")
+        print(epoch.get_allgates())
 
 
-def printAllGates(circuit):
-    print("================================================================")
-    print(f"The input state is:\n{circuit.InputState.A}")
-    print("================================================================")
-    for index, x in enumerate(circuit.TransistionLayers):
-        print(f"Transistion Matrix {index +1}")
-        print(x)
-    print("================================================================")
-    print(f"The Ouput state is:\n{circuit.OutputState.A}")
-    print("================================================================")
+def printalphasforeachepoch(allcircuits):
+    for index, epoch in enumerate(allcircuits):
+        print("==========================")
+        print("Epoch No:", index)
+        print("==========================")
+        print(epoch.alphas)
 
 
-def generateAND_DataSet(numofInputBits, probOfEachInput, filename, numOfSamples=100):
-    """
-    This generates a dataset where the output is an AND.
-    Args:
-        numofInputBits - INT - The number of input bits.
-        probOfEachInput - DECIMAL - The probability of the inputs being 1.
-        numOfSamples - DECIMAL - Number of samples of this to be generated. Defualt is 100
-    Return:
-        It returns a file that is in the same format as the geonomic data.
-    """
-    # Not Implemented
-
-
-def generateXOR_DataSet(numofInputBits, probOfEachInput, filename, numOfSamples=100):
-    """
-    This generates a dataset where the output is an AND.
-    Args:
-        numofInputBits - INT - The number of input bits.
-        probOfEachInput - DECIMAL - The probability of the inputs being 1.
-        numOfSamples - DECIMAL - Number of samples of this to be generated. Defualt is 100
-    Return:
-        It returns a file that is in the same format as the geonomic data.
-    """
-    # Not Implemented
+def printallinfo(allcircuits):
+    for index, epoch in enumerate(allcircuits):
+        print("==========================")
+        print("Epoch No:", index)
+        print("==========================")
+        print(f"Transistion Matrix :\n{epoch.get_allgates()}")
+        print(f"Alphas Matrix :\n{[x.A for x in epoch.alphas]}")
+        print(f"Betas Matrix :\n{[x.A for x in epoch.betas]}")
+        print(f"Xis Matrix :\n{[x.A for x in epoch.xis]}")

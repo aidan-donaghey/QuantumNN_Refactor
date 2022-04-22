@@ -4,6 +4,8 @@ from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
 from Modules.circuits import Circuit
 from Modules.collectionofcircuits import Collection
+from Modules import utils
+import numpy as np
 
 # # Testing the RZX gate
 # rzx = RzxGate(2, 1, 1)
@@ -36,36 +38,43 @@ SIX_XOR = FOLDER + "6Bits/XOR_4Padded"
 
 RXX = "RXX"
 RZX = "RZX"
-Qubits = 3
+Qubits = 2
 
 # Gates = [RZX,RZX]
-Gates = [RXX, RZX, RZX]
+Gates = [RZX]
 # Change for different DataPoints
 CURRENTDATA = IDENTITYDATA
 
 DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
-DataPoint = DataSet[0]
-testCircuit = Circuit(Qubits, *DataPoint, Gates, [1, 2, 3, 4, 5, 6])
-# print(testCircuit)
-
-# print("The XI values are:\n", [x.A for x in testCircuit.get_xis()])
-# print("XI Values from the circuit:\n", [x.A for x in testCircuit.get_xis()])
-# testCircuit.get_xis()
-# print(
-#     "The numerator and Denominator:",
-#     testCircuit.get_numerators_and_denominators_for_circuit(),
-# )
-# # print([x.A for x in testCircuit.alphas])
-
-# testCircuit.backward_pass()
-
-# # print(*[f"beta {index}:\n{x.A}\n" for index, x in enumerate(testCircuit.betas)])
-
-# print([xi.A for xi in testCircuit.get_xi()])
 
 testCollection = Collection(Qubits, DataSet, Gates)
-testCollection.create_circuits()
-# ws = testCollection.calculate_ws()
-# print(ws)
-testCollection.fit(Epoch=10)
-print(testCollection.predict(DataPoint))
+
+testCollection.create_circuits(Theta=[0.9])
+
+# testCircuit = Circuit(Qubits, DataSet[1][0], DataSet[1][1], Gates)
+# testCircuit.get_xis()
+# print(f"testCircuit Transitions Before any Update:\n{testCircuit.get_allgates()}")
+# print(f"testCircuit ZK Before any Update:\n{testCircuit.get_allgates()[0].zk_matrix}")
+# print(f"testCircuit.alphas:\n{[x.A for x in testCircuit.alphas]}")
+# print(f"testCircuit.betas:\n{[x.A for x in testCircuit.betas]}")
+# print(f"testCircuit.xis:\n{[x.A for x in testCircuit.xis]}")
+# print(
+#     f"testCircuit Numerator and Denominiator:\n{testCircuit.get_numerators_and_denominators_for_circuit()}"
+# )
+
+# # ws = testCollection.calculate_ws()
+# # print(ws)
+allcircuits = testCollection.fit(Epoch=6)
+
+
+# hf.printallinfo(allcircuits)
+
+
+print(testCollection.predict(DataSet[0]))
+print(testCollection.predict(DataSet[1]))
+print(testCollection.predict(DataSet[2]))
+print(testCollection.predict(DataSet[3]))
+# # print("all combinations")
+# # print(utils.getInputs(2))
+# print(f"The Px values:{[x.get_px()for x in allcircuits]}")
+# print(f"Negative Log Likihoods: {[-np.log(x.get_px()) for x in allcircuits]}")
