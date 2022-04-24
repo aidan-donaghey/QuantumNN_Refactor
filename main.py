@@ -38,18 +38,20 @@ SIX_XOR = FOLDER + "6Bits/XOR_4Padded"
 
 RXX = "RXX"
 RZX = "RZX"
-Qubits = 2
+Qubits = 3
 
 # Gates = [RZX,RZX]
-Gates = [RZX]
+Gates = [RZX, RXX, RZX, RXX, RZX, RXX, RZX]
 # Change for different DataPoints
-CURRENTDATA = IDENTITYDATA
+CURRENTDATA = THREE_AND
 
 DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
 
 testCollection = Collection(Qubits, DataSet, Gates)
 
-testCollection.create_circuits(Theta=[0.9])
+testCollection.create_circuits(
+    Theta=[x for x in np.random.normal(0, 1, (len(Gates) * (Qubits - 1)))]
+)
 
 # testCircuit = Circuit(Qubits, DataSet[1][0], DataSet[1][1], Gates)
 # testCircuit.get_xis()
@@ -62,18 +64,17 @@ testCollection.create_circuits(Theta=[0.9])
 #     f"testCircuit Numerator and Denominiator:\n{testCircuit.get_numerators_and_denominators_for_circuit()}"
 # )
 
-# # ws = testCollection.calculate_ws()
-# # print(ws)
-allcircuits = testCollection.fit(Epoch=6)
+# ws = testCollection.calculate_ws()
+# print(ws)
+allcircuits = testCollection.fit(Epoch=50)
 
 
 # hf.printallinfo(allcircuits)
 
+for x in range(4):
+    print(DataSet[x])
+    print(testCollection.predict(DataSet[x]))
 
-print(testCollection.predict(DataSet[0]))
-print(testCollection.predict(DataSet[1]))
-print(testCollection.predict(DataSet[2]))
-print(testCollection.predict(DataSet[3]))
 # # print("all combinations")
 # # print(utils.getInputs(2))
 # print(f"The Px values:{[x.get_px()for x in allcircuits]}")
