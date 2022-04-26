@@ -25,7 +25,7 @@ class FCBlock(ABC):
         """Abstract method to create the block."""
 
     def __repr__(self):
-        outut = (
+        output = (
             f"{self.__name__}\n"
             f"Number of Input Bits: {self.number_of_bits}\n"
             f"Number of Gates: {len(self.gates)}\n"
@@ -53,11 +53,12 @@ class RxxFullyConnectedBlock(FCBlock):
 
     def create_block(self):
         """Creates the block."""
-        print(f"length of theta {len(self.thetas)}")
+        thetaIndex = 0 
         for i in range(self.number_of_bits-1):
             for j in range(self.number_of_bits):
                 if i != j:
-                    self.gates.append(RxxGateAnyConnect(self.number_of_bits, i, j, self.thetas[i]))
+                    self.gates.append(RxxGateAnyConnect(self.number_of_bits, i, j, self.thetas[thetaIndex]))
+                    thetaIndex += 1
 
 
 class RzxFullyConnectedBlock(FCBlock):
@@ -72,7 +73,9 @@ class RzxFullyConnectedBlock(FCBlock):
 
     def create_block(self):
         """Creates the block."""
+        thetaIndex = 0 
         for i in range(self.number_of_bits):
             for j in range(self.number_of_bits):
                  if i != j:
-                    self.gates.append(RzxGateAnyConnect(self.number_of_bits, i, j, self.thetas[i]))
+                    self.gates.append(RzxGateAnyConnect(self.number_of_bits, i, j, self.thetas[thetaIndex]))
+                    thetaIndex += 1

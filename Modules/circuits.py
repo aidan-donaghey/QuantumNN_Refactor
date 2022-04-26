@@ -72,11 +72,14 @@ class Circuit:
                 self.blocks.append(
                     RxxFullyConnectedBlock(
                         self.number_of_bits,
-                        self.thetas[
-                            indexofgate
-                            * (self.number_of_bits - 1) : (indexofgate + 1)
-                            * (self.number_of_bits - 1)
-                        ],
+                        self.thetas[indexofgate * (self.number_of_bits**2 - self.number_of_bits) : (indexofgate + 1) * (self.number_of_bits**2 - self.number_of_bits)],
+                    )
+                )
+            elif gate == "FCRZX":
+                self.blocks.append(
+                    RzxFullyConnectedBlock(
+                        self.number_of_bits,
+                        self.thetas[indexofgate * (self.number_of_bits**2 - self.number_of_bits) : (indexofgate + 1) * (self.number_of_bits**2 - self.number_of_bits)],
                     )
                 )
             else:
@@ -170,9 +173,9 @@ class Circuit:
         # If it is the sum of the off and on diagonals .
         for gate, xi in zip(self.get_allgates(), self.xis):
             listofdenominators.append(xi.sum())
-            if gate.__name__ == "RzxGate":
+            if gate.__name__ == "RzxGate" or gate.__name__ == "RzxGateAnyConnect":
                 matrix = xi.multiply(gate.zk_matrix)
-            elif gate.__name__ == "RxxGate":
+            elif gate.__name__ == "RxxGate" or gate.__name__ == "RxxGateAnyConnect":
                 matrix = xi
             print(f"Matrix : {matrix}")
             sumofdiagonals = matrix.diagonal().sum()
@@ -222,7 +225,7 @@ class Circuit:
             f"Blocks: \n{self.gates}\n"
         )
 
-    def __get_thetas(self, thetas) -> list:
+    def __get_thetas_depricated(self, thetas) -> list:
         """internal Method for getting thetas in the contructor.
 
         Args:
@@ -245,6 +248,38 @@ class Circuit:
             finaltheta = thetas
         else:
             finaltheta = [thetas] * ((self.number_of_bits - 1) * len(self.gates))
+        return finaltheta
+    
+    def __get_thetas(self, thetas) -> list:
+        """internal Method for getting thetas in the contructor.
+
+        Args:
+            thetas (list or int): Either a list of thetas or a single theta.
+
+        Raises:
+            IndexError: If passed a list that is of the wrong length.
+
+        Returns:
+            _type_: The correct thetas.
+        """
+        numberOfThetas:int = 0
+        for x in self.gates:
+            if x == "RZX" or x == "RXX":
+                numberOfThetas += (self.number_of_bits - 1)
+            elif x == "FCRZX" or x == "FCRXX":
+                numberOfThetas += ((self.number_of_bits**2)  - self.number_of_bits)
+              
+        if isinstance(thetas, list):
+            if len(thetas) != (numberOfThetas):
+                raise IndexError(
+                    (
+                        "The length of thetas list is incorrect. \n\n"
+                        f"For this example it should be {numberOfThetas} but was {len(thetas)}"
+                    )
+                )
+            finaltheta = thetas
+        else:
+            finaltheta = [thetas] * (numberOfThetas)
         return finaltheta
 
     def __inputfeature_to_inputstate(self) -> sparse.csr_matrix:

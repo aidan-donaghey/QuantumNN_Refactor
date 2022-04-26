@@ -38,8 +38,8 @@ class Collection:
             thetas = self.__check_theta(Theta)
         elif intialTheta is not None:
             thetas = self.__check_intial_theta(intialTheta)
-        else:
-            thetas = [1 for i in range((self.number_of_bits - 1) * len(self.Gates))]
+        # else:
+        #     thetas = [1 for i in range((self.number_of_bits - 1) * len(self.Gates))]
 
         listofcircuits = []
         for data in self.DataSet:
@@ -107,20 +107,45 @@ class Collection:
         return sumofnums, sumofdenums
 
     def __check_theta(self, theta):
-        if theta is not None:
-            if len(theta) != (self.number_of_bits - 1) * len(self.Gates):
-                raise Exception(
-                    f"Theta is of length {len(theta)} and it should be {(self.number_of_bits - 1) * len(self.Gates)}"
+        numberOfThetas:int = 0
+        for x in self.Gates:
+            if x == "RZX" or x == "RXX":
+                numberOfThetas += (self.number_of_bits - 1)
+            elif x == "FCRZX" or x == "FCRXX":
+                numberOfThetas += ((self.number_of_bits**2)  - self.number_of_bits)  
+        if isinstance(theta, list):
+            if len(theta) != (numberOfThetas):
+                raise IndexError(
+                    (
+                        "The length of thetas list is incorrect. \n\n"
+                        f"For this example it should be {numberOfThetas} but was {len(theta)}"
+                    )
                 )
-        return theta
+            finaltheta = theta
+        else:
+            finaltheta = [theta] * (numberOfThetas)
+        return finaltheta
 
     def __check_intial_theta(self, inital_theta):
-        if type(inital_theta) is list:
-            return inital_theta
+        numberOfThetas:int = 0
+        for x in self.Gates:
+            if x == "RZX" or x == "RXX":
+                numberOfThetas += (self.number_of_bits - 1)
+            elif x == "FCRZX" or x == "FCRXX":
+                numberOfThetas += ((self.number_of_bits**2)  - self.number_of_bits)
+              
+        if isinstance(inital_theta, list):
+            if len(inital_theta) != (numberOfThetas):
+                raise IndexError(
+                    (
+                        "The length of thetas list is incorrect. \n\n"
+                        f"For this example it should be {numberOfThetas} but was {len(inital_theta)}"
+                    )
+                )
+            finaltheta = inital_theta
         else:
-            return [
-                inital_theta for i in range((self.number_of_bits - 1) * len(self.Gates))
-            ]
+            finaltheta = [inital_theta] * (numberOfThetas)
+        return finaltheta
 
     def __repr__(self) -> str:
         output = (

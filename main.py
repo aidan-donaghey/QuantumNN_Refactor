@@ -3,7 +3,7 @@
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_fcgates import RzxGateAnyConnect, RxxGateAnyConnect
 from Modules.abstract_block import RzxBlock, RxxBlock
-from Modules.abstract_fcblock import RxxFullyConnectedBlock, RzxFullyConnectedBlock
+from Modules.abstract_fcblock import RzxFullyConnectedBlock, RxxFullyConnectedBlock
 from Modules.circuits import Circuit
 from Modules.collectionofcircuits import Collection
 from Modules import utils
@@ -40,42 +40,48 @@ SIX_XOR = FOLDER + "6Bits/XOR_4Padded"
 
 RXX = "RXX"
 RZX = "RZX"
-Qubits = 3
-
+FCRXX = "FCRXX"
+FCRZX = "FCRZX"
+Qubits = 4
 # Gates = [RZX,RZX]
-Gates = [RZX]
+Gates = [FCRZX,FCRZX,FCRZX,FCRZX]
+
 # Change for different DataPoints
-CURRENTDATA = THREE_AND
+CURRENTDATA = FOUR_XOR
+
+
 
 DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
 
-# testCollection = Collection(Qubits, DataSet, Gates)
+testCollection = Collection(Qubits, DataSet, Gates)
 
-# testCollection.create_circuits(
-#     Theta=[x for x in np.random.normal(0, 1, (len(Gates) * (Qubits - 1)))]
+Theta=[x for x in np.random.normal(0, 1, 48)]
+print("Theta 0: ", Theta)
+testCollection.create_circuits(
+    Theta = Theta
+)
+
+# testCircuit = Circuit(Qubits, DataSet[1][0], DataSet[1][1], Gates,thetas=[x for x in np.random.normal(0, 1, 8)])
+# testCircuit.get_xis()
+# print(f"testCircuit Transitions Before any Update:\n{testCircuit.get_allgates()}")
+# print(f"testCircuit ZK Before any Update:\n{testCircuit.get_allgates()[0].zk_matrix}")
+# print(f"testCircuit.alphas:\n{[x.A for x in testCircuit.alphas]}")
+# print(f"testCircuit.betas:\n{[x.A for x in testCircuit.betas]}")
+# print(f"testCircuit.xis:\n{[x.A for x in testCircuit.xis]}")
+# print(
+#     f"testCircuit Numerator and Denominiator:\n{testCircuit.get_numerators_and_denominators_for_circuit()}"
 # )
-
-# # testCircuit = Circuit(Qubits, DataSet[1][0], DataSet[1][1], Gates)
-# # testCircuit.get_xis()
-# # print(f"testCircuit Transitions Before any Update:\n{testCircuit.get_allgates()}")
-# # print(f"testCircuit ZK Before any Update:\n{testCircuit.get_allgates()[0].zk_matrix}")
-# # print(f"testCircuit.alphas:\n{[x.A for x in testCircuit.alphas]}")
-# # print(f"testCircuit.betas:\n{[x.A for x in testCircuit.betas]}")
-# # print(f"testCircuit.xis:\n{[x.A for x in testCircuit.xis]}")
-# # print(
-# #     f"testCircuit Numerator and Denominiator:\n{testCircuit.get_numerators_and_denominators_for_circuit()}"
-# # )
 
 # # ws = testCollection.calculate_ws()
 # # print(ws)
-# allcircuits = testCollection.fit(Epoch=50)
+allcircuits = testCollection.fit(Epoch=10)
 
 
 # # hf.printallinfo(allcircuits)
 
-# for x in range(4):
-#     print(DataSet[x])
-#     print(testCollection.predict(DataSet[x]))
+for x in range(4):
+    print(DataSet[x])
+    print(testCollection.predict(DataSet[x]))
 
 
 
@@ -84,3 +90,9 @@ DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
 # print(f"The Px values:{[x.get_px()for x in allcircuits]}")
 # print(f"Negative Log Likihoods: {[-np.log(x.get_px()) for x in allcircuits]}")
 
+
+
+# FCrzx = RzxFullyConnectedBlock(3, [1, 1,2,4,5,6])
+# print(FCrzx)
+
+# FCrzx.print()
