@@ -4,6 +4,8 @@ from ast import Raise
 from matplotlib.pyplot import get
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_block import RzxBlock, RxxBlock
+from Modules.abstract_fcblock import RxxFullyConnectedBlock, RzxFullyConnectedBlock
+from Modules.abstract_fcgates import RzxGateAnyConnect, RxxGateAnyConnect
 from scipy import sparse, linalg
 import numpy as np
 
@@ -40,6 +42,7 @@ class Circuit:
 
     def create_circuit(self) -> None:
         """This creates the circuit. It calls the createLayer function for each layer."""
+        # TODO maybe change this to a switch statement
         for indexofgate, gate in enumerate(self.gates):
             if gate == "RZX":
                 # This theta should be (number of bits - 1) * number of gates
@@ -57,6 +60,17 @@ class Circuit:
             elif gate == "RXX":
                 self.blocks.append(
                     RxxBlock(
+                        self.number_of_bits,
+                        self.thetas[
+                            indexofgate
+                            * (self.number_of_bits - 1) : (indexofgate + 1)
+                            * (self.number_of_bits - 1)
+                        ],
+                    )
+                )
+            elif gate == "FCRXX":
+                self.blocks.append(
+                    RxxFullyConnectedBlock(
                         self.number_of_bits,
                         self.thetas[
                             indexofgate

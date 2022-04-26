@@ -3,6 +3,7 @@
 from Modules.abstract_gate import RzxGate, RxxGate
 from Modules.abstract_fcgates import RzxGateAnyConnect, RxxGateAnyConnect
 from Modules.abstract_block import RzxBlock, RxxBlock
+from Modules.abstract_fcblock import RxxFullyConnectedBlock, RzxFullyConnectedBlock
 from Modules.circuits import Circuit
 from Modules.collectionofcircuits import Collection
 from Modules import utils
