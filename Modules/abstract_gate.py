@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.sparse import coo_matrix
+import scipy.sparse as sp
 from Modules import utils
 from Modules import helperfunctions as hf
 
@@ -44,6 +45,8 @@ class Gate(ABC):
     def print_matrix(self):
         """Prints the matrix for the gate."""
         print(self.matrix.A)
+
+
 
 
 class RzxGate(Gate):
