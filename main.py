@@ -42,12 +42,12 @@ RXX = "RXX"
 RZX = "RZX"
 FCRXX = "FCRXX"
 FCRZX = "FCRZX"
-Qubits = 4
+Qubits = 6
 # Gates = [RZX,RZX]
-Gates = [FCRZX,FCRZX,FCRZX,FCRZX]
+Gates = [RZX]
 
 # Change for different DataPoints
-CURRENTDATA = FOUR_XOR
+CURRENTDATA = SIX_XOR
 
 
 
@@ -55,7 +55,7 @@ DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
 
 testCollection = Collection(Qubits, DataSet, Gates)
 
-Theta=[x for x in np.random.normal(0, 1, 48)]
+Theta=[x for x in np.random.normal(0, 1, 5)]
 print("Theta 0: ", Theta)
 testCollection.create_circuits(
     Theta = Theta
