@@ -177,16 +177,16 @@ class Circuit:
                 matrix = xi.multiply(gate.zk_matrix)
             elif gate.__name__ == "RxxGate" or gate.__name__ == "RxxGateAnyConnect":
                 matrix = xi
-            print(f"Matrix : {matrix}")
+            # print(f"Matrix : {matrix}")
             sumofdiagonals = matrix.diagonal().sum()
-            print(f"Sum of diagonals : {sumofdiagonals}")
+            # print(f"Sum of diagonals : {sumofdiagonals}")
             matcopy = matrix.copy()
             matcopy.setdiag(0)
-            print(f"Off diagonals : {matcopy}")
+            # print(f"Off diagonals : {matcopy}")
             sumoffdiagonals = matcopy.tolil().sum()
-            print(f"Sum of off diagonals : {sumoffdiagonals}")
+            # print(f"Sum of off diagonals : {sumoffdiagonals}")
             listofnumerators.append(sumoffdiagonals - sumofdiagonals)
-        print(f"List of Denominators: {listofdenominators}")
+        # print(f"List of Denominators: {listofdenominators}")
         return listofnumerators, listofdenominators
 
     def update_w(self, thetas):
@@ -212,7 +212,7 @@ class Circuit:
         print(f"Prob of 0: {probOf0Output}")
         print(f"Prob of 1: {probOf1Output}")
         print("==============================\n")
-
+        return [self.outputfeature, probOf0Output, probOf1Output]
     # ==================================
     # Private Functions
     # ==================================

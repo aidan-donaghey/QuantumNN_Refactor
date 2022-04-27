@@ -8,22 +8,12 @@ from Modules.circuits import Circuit
 from Modules.collectionofcircuits import Collection
 from Modules import utils
 import numpy as np
-
-# Testing the RZX gate
-# rzx = RzxGate(3, 1, 1)
-# print(rzx.matrix)
-
-# # Testing the Blocks
-# rzxBlock = RzxBlock(3, [1, 1])
-# rzxBlock.print()
-
-# # Testing the Blocks
-# rxxBlock = RxxBlock(3, [2, 10])
-# rxxBlock.print()
+import random
 
 
 from Modules import helperfunctions as hf
 
+# Sample Data Sets
 FOLDER = "SimpleData/"
 IDENTITYDATA = FOLDER + "2Bits/" + "IDENTITY_2Bits_5samples"
 IDENTITYDATASMALL = FOLDER + "2Bits/" + "IDENTITY_2Bits_2samples"
@@ -38,51 +28,55 @@ FOUR_XOR = FOLDER + "4Bits/XOR_4Bits"
 SIX_XOR = FOLDER + "6Bits/XOR_4Padded"
 
 
+# Real Data Sets
+FOLDER = "data/"
+ALL_DATA = FOLDER + "data_all"
+
+
+
 RXX = "RXX"
 RZX = "RZX"
 FCRXX = "FCRXX"
 FCRZX = "FCRZX"
-Qubits = 6
-# Gates = [RZX,RZX]
-Gates = [RZX]
+Qubits = 9
+Gates = [RZX, RXX]
 
 # Change for different DataPoints
-CURRENTDATA = SIX_XOR
+CURRENTDATA = ALL_DATA
 
 
 
 DataSet = hf.getDatasets(CURRENTDATA, numOfBits=Qubits)
+# Due to the genitic data being ordered based off output.
+random.shuffle(DataSet)
+Trainingset = DataSet[:int(len(DataSet) * 0.8)]
+Testingset = DataSet[int(len(DataSet) * 0.8):]
+testCollection = Collection(Qubits, Trainingset, Gates)
+# NOTE: IF ERROR SAYS THE FOLLOWING . THE CORRECT NUMBER IS THE LAST PARAM IN THE NORMAL FUNCTION
+# IndexError: The length of thetas list is incorrect.
 
-testCollection = Collection(Qubits, DataSet, Gates)
+# For this example it should be 8 but was 2
 
-Theta=[x for x in np.random.normal(0, 1, 5)]
-print("Theta 0: ", Theta)
+Theta=[x for x in np.random.normal(0, 1, 16)]
+# print("Theta 0: ", Theta)
 testCollection.create_circuits(
     Theta = Theta
 )
 
-# testCircuit = Circuit(Qubits, DataSet[1][0], DataSet[1][1], Gates,thetas=[x for x in np.random.normal(0, 1, 8)])
-# testCircuit.get_xis()
-# print(f"testCircuit Transitions Before any Update:\n{testCircuit.get_allgates()}")
-# print(f"testCircuit ZK Before any Update:\n{testCircuit.get_allgates()[0].zk_matrix}")
-# print(f"testCircuit.alphas:\n{[x.A for x in testCircuit.alphas]}")
-# print(f"testCircuit.betas:\n{[x.A for x in testCircuit.betas]}")
-# print(f"testCircuit.xis:\n{[x.A for x in testCircuit.xis]}")
-# print(
-#     f"testCircuit Numerator and Denominiator:\n{testCircuit.get_numerators_and_denominators_for_circuit()}"
-# )
+allcircuits = testCollection.fit(Epoch=20)
 
-# # ws = testCollection.calculate_ws()
-# # print(ws)
-allcircuits = testCollection.fit(Epoch=10)
+print("TestingSet: ", Testingset)
+Probabilities = []
+for x in Testingset:
+    # print(testCollection.predict(x))
+    Probabilities.append(testCollection.predict(x))
+percentagesandSplits = hf.get_percentage_correct(Probabilities)
+print(f"There were {percentagesandSplits[0]}% predicted Correctly.")
+print(f"{percentagesandSplits[1]}% of data outputs were 0 and  {100 - percentagesandSplits[1]}% were 1")
 
 
-# # hf.printallinfo(allcircuits)
-
-for x in range(4):
-    print(DataSet[x])
-    print(testCollection.predict(DataSet[x]))
-
+            
+    
 
 
 # # print("all combinations")

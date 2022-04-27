@@ -234,6 +234,20 @@ def generateDataSetAlternative(
         f.write(outputfile)
 
 
+
+def get_percentage_correct(Probabilities):
+    correct = 0
+    dataSplit = 0
+    for x in Probabilities:
+        # If it expected to be 0 and chance of 0 is the highest
+        if int(x[0]) == 0 and x[1] > 0.5:
+            correct +=  1
+        elif int(x[0]) == 1 and x[2] > 0.5:
+            correct +=  1
+        if int(x[0]) == 0:
+            dataSplit += 1
+    return (((correct / len(Probabilities)) * 100), (dataSplit / len(Probabilities)) * 100)
+
 def printtransistionforeachepoch(allcircuits):
     for index, epoch in enumerate(allcircuits):
         print("==========================")

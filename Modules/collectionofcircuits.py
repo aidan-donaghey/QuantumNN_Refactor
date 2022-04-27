@@ -2,6 +2,7 @@ from Modules.circuits import Circuit
 import numpy as np
 from typing import Union
 import sys
+from tqdm import tqdm
 
 class Collection:
     """Creates a new CircuitCollection Object. It creates a circuit with the correct input and output features based on the dataset that is provided."""
@@ -43,7 +44,8 @@ class Collection:
 
         listofcircuits = []
         for data in self.DataSet:
-            print(data)
+            # print(data)
+
             circuit = Circuit(self.number_of_bits, *data, self.Gates, thetas=thetas)
             listofcircuits.append(circuit)
         self.circuits = listofcircuits
@@ -84,26 +86,29 @@ class Collection:
         """Calculates the W values for each circuit in the collection."""
         nums_and_denoms = self.__sum_of_nums_and_denums()
         terms_inside_tan = [x / y for x, y in zip(*nums_and_denoms)]
-        print("Terms inside the tan func1")
-        print(terms_inside_tan)
+        # print("Terms inside the tan func1")
+        # print(terms_inside_tan)
         w = [np.arctanh(term) if np.abs(term) < 0.99 else np.sign(term) * 100 for term in terms_inside_tan]
 
         # w = list(np.arctanh(terms_inside_tan))
-        print("W VALUESE")
-        print(w)
+        # print("W VALUESE")
+        # print(w)
         return w
 
     def __sum_of_nums_and_denums(self):
         allnums = []
         alldenums = []
-        for circuit in self.circuits:
+        print("===============================================================")
+        print("Calculating The Update Values")
+        print("===============================================================")
+        for circuit in tqdm(self.circuits):
             circuit.get_xis()
             num, denum = circuit.get_numerators_and_denominators_for_circuit()
             allnums.append(num)
             alldenums.append(denum)
-
         sumofnums = [sum(x) for x in zip(*allnums)]
         sumofdenums = [sum(x) for x in zip(*alldenums)]
+        print("===============================================================")
         return sumofnums, sumofdenums
 
     def __check_theta(self, theta):
